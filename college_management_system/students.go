@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Student represents student entity stored in DB
 type Student struct {
 	ID    int    `json:"id" bson:"id"`
 	Name  string `json:"name" bson:"name"`
@@ -16,28 +17,35 @@ type Student struct {
 	Dept  string `json:"dept" bson:"dept"`
 }
 
+// Repository Constructors
+
+// NewMySQLStudentRepo creates a new MySQLStudentRepo instance
 func NewMySQLStudentRepo(db *sql.DB) StudentRepository {
 	return &MySQLStudentRepo{DB: db}
 }
 
+// NewMongoDBStudentRepo creates a new MongoDBStudentRepo instance
 func NewMongoDBStudentRepo(col *mongo.Collection) StudentRepository {
 	return &MongoDBStudentRepo{Collection: col}
 }
 
-// Create Students
+// CreateStudent inserts student into MySQL database
 func (m *MySQLStudentRepo) CreateStudent(s Student) (*Student, error) {
+
+	// Execute SQL insert query
 	res, err := m.DB.Exec("INSERT INTO students(name , age , email , dept ) VALUES (? , ? , ? , ?)", s.Name, s.Age, s.Email, s.Dept)
 	if err != nil {
 		return nil, err
 	}
-	id, _ := res.LastInsertId()
 
+	// Get auto-generated ID
+	id, _ := res.LastInsertId()
 	s.ID = int(id)
 
 	return &s, nil
 }
 
-// Get Students
+// GetAllStudent returns all students from DB or cache
 func (m *MySQLStudentRepo) GetAllStudent() ([]Student, error) {
 
 	rows, err := m.DB.Query(
@@ -64,7 +72,7 @@ func (m *MySQLStudentRepo) GetAllStudent() ([]Student, error) {
 	return students, nil
 }
 
-/* READ BY ID */
+// GetByIDStudent retrieves a student record by ID from MySQL
 func (m *MySQLStudentRepo) GetByIDStudent(id int) (*Student, error) {
 
 	row := m.DB.QueryRow(
@@ -83,7 +91,7 @@ func (m *MySQLStudentRepo) GetByIDStudent(id int) (*Student, error) {
 	return &s, nil
 }
 
-/* UPDATE */
+// UpdateStudent updates an existing student record in MySQL
 func (m *MySQLStudentRepo) UpdateStudent(s Student) error {
 
 	_, err := m.DB.Exec(
@@ -94,7 +102,7 @@ func (m *MySQLStudentRepo) UpdateStudent(s Student) error {
 	return err
 }
 
-/* DELETE */
+// DeleteStudent removes a student record from MySQL by ID.
 func (m *MySQLStudentRepo) DeleteStudent(id int) error {
 
 	_, err := m.DB.Exec(
@@ -105,9 +113,9 @@ func (m *MySQLStudentRepo) DeleteStudent(id int) error {
 	return err
 }
 
-// Students MongoDB CRUD operations
+// MongoDB Implementation of StudentRepository
 
-// Create Students
+// CreateStudent inserts a new student document into MongoDB.
 func (m *MongoDBStudentRepo) CreateStudent(s Student) (*Student, error) {
 
 	// Generate ID manually
@@ -121,7 +129,7 @@ func (m *MongoDBStudentRepo) CreateStudent(s Student) (*Student, error) {
 	return &s, nil
 }
 
-// Read all students
+// GetAllStudent retrieves all student documents from MongoDB
 func (m *MongoDBStudentRepo) GetAllStudent() ([]Student, error) {
 	cur, err := m.Collection.Find(context.TODO(), bson.M{})
 	if err != nil {
@@ -141,7 +149,7 @@ func (m *MongoDBStudentRepo) GetAllStudent() ([]Student, error) {
 	return students, nil
 }
 
-// Read students byu ID
+// GetByIDStudent retrieves a student document by ID from MongoDB
 func (m *MongoDBStudentRepo) GetByIDStudent(id int) (*Student, error) {
 	var s Student
 	if err := m.Collection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&s); err != nil {
@@ -150,13 +158,13 @@ func (m *MongoDBStudentRepo) GetByIDStudent(id int) (*Student, error) {
 	return &s, nil
 }
 
-// Update students By ID
+// UpdateStudent updates an existing student document in MongoDB
 func (m *MongoDBStudentRepo) UpdateStudent(s Student) error {
 	_, err := m.Collection.UpdateOne(context.TODO(), bson.M{"id": s.ID}, bson.M{"$set": s})
 	return err
 }
 
-// Delete students by ID
+// DeleteStudent removes a student document from MongoDB by ID
 func (m *MongoDBStudentRepo) DeleteStudent(id int) error {
 
 	_, err := m.Collection.DeleteOne(
