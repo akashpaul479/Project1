@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Lecturer represents lecturer entity stored in DB
 type Lecturer struct {
 	ID          int    `json:"id" bson:"id"`
 	Name        string `json:"name" bson:"name"`
@@ -16,15 +17,21 @@ type Lecturer struct {
 	Designation string `json:"designation" bson:"designation"`
 }
 
+// Repository Constructors
+
+// NewMySQLLecturerRepo creates a new MySQLLecturerRepo instance
 func NewMySQLLecturerRepo(db *sql.DB) LecturerRepository {
 	return &MySQLLecturerRepo{DB: db}
 }
 
+// NewMongoDBLecturerRepo creates a new MongoDBLecturerRepo instance
 func NewMongoDBLecturerRepo(col *mongo.Collection) LecturerRepository {
 	return &MongoDBLecturerRepo{Collection: col}
 }
 
-// Create Students
+// MySQL Implementation of LecturerRepository
+
+// CreateLecturer inserts a new lecturer record into MySQL
 func (m *MySQLLecturerRepo) CreateLecturer(l Lecturer) (*Lecturer, error) {
 	res, err := m.DB.Exec("INSERT INTO lecturers(name , age , email , designation ) VALUES (? , ? , ? , ?)", l.Name, l.Age, l.Email, l.Designation)
 	if err != nil {
@@ -37,7 +44,7 @@ func (m *MySQLLecturerRepo) CreateLecturer(l Lecturer) (*Lecturer, error) {
 	return &l, nil
 }
 
-// Get Students
+// GetAllLecturer retrieves all lecturer records from MySQL.
 func (m *MySQLLecturerRepo) GetAllLecturer() ([]Lecturer, error) {
 
 	rows, err := m.DB.Query(
@@ -64,7 +71,7 @@ func (m *MySQLLecturerRepo) GetAllLecturer() ([]Lecturer, error) {
 	return lecturers, nil
 }
 
-/* READ BY ID */
+// GetByIDLecturer retrieves a lecturer record by ID from MySQL.
 func (m *MySQLLecturerRepo) GetByIDLecturer(id int) (*Lecturer, error) {
 
 	row := m.DB.QueryRow(
@@ -83,7 +90,7 @@ func (m *MySQLLecturerRepo) GetByIDLecturer(id int) (*Lecturer, error) {
 	return &l, nil
 }
 
-/* UPDATE */
+// UpdateLecturer updates an existing lecturer record in MySQL
 func (m *MySQLLecturerRepo) UpdateLecturer(l Lecturer) error {
 
 	_, err := m.DB.Exec(
@@ -94,7 +101,7 @@ func (m *MySQLLecturerRepo) UpdateLecturer(l Lecturer) error {
 	return err
 }
 
-/* DELETE */
+// DeleteLecturer removes a lecturer record from MySQL by ID
 func (m *MySQLLecturerRepo) DeleteLecturer(id int) error {
 
 	_, err := m.DB.Exec(
@@ -105,9 +112,9 @@ func (m *MySQLLecturerRepo) DeleteLecturer(id int) error {
 	return err
 }
 
-// Students MongoDB CRUD operations
+// MongoDB Implementation of LecturerRepository
 
-// Create Students
+// CreateLecturer inserts a new lecturer document into MongoDB
 func (m *MongoDBLecturerRepo) CreateLecturer(l Lecturer) (*Lecturer, error) {
 
 	// Generate ID manually
@@ -121,7 +128,7 @@ func (m *MongoDBLecturerRepo) CreateLecturer(l Lecturer) (*Lecturer, error) {
 	return &l, nil
 }
 
-// Read all students
+// GetAllLecturer retrieves all lecturer documents from MongoDB.
 func (m *MongoDBLecturerRepo) GetAllLecturer() ([]Lecturer, error) {
 	cur, err := m.Collection.Find(context.TODO(), bson.M{})
 	if err != nil {
@@ -141,7 +148,7 @@ func (m *MongoDBLecturerRepo) GetAllLecturer() ([]Lecturer, error) {
 	return lecturers, nil
 }
 
-// Read students byu ID
+// GetByIDLecturer retrieves a lecturer document by ID from MongoDB.
 func (m *MongoDBLecturerRepo) GetByIDLecturer(id int) (*Lecturer, error) {
 	var l Lecturer
 	if err := m.Collection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&l); err != nil {
@@ -150,13 +157,13 @@ func (m *MongoDBLecturerRepo) GetByIDLecturer(id int) (*Lecturer, error) {
 	return &l, nil
 }
 
-// Update students By ID
+// UpdateLecturer updates an existing lecturer document in MongoDB
 func (m *MongoDBLecturerRepo) UpdateLecturer(l Lecturer) error {
 	_, err := m.Collection.UpdateOne(context.TODO(), bson.M{"id": l.ID}, bson.M{"$set": l})
 	return err
 }
 
-// Delete students by ID
+// DeleteLecturer removes a lecturer document from MongoDB by ID.
 func (m *MongoDBLecturerRepo) DeleteLecturer(id int) error {
 
 	_, err := m.Collection.DeleteOne(
