@@ -43,7 +43,8 @@ type MySQLLibraryRepo struct {
 
 // MongoDBLibraryRepo implements LecturerRepository using MongoDB
 type MongoDBLibraryRepo struct {
-	Collection *mongo.Collection
+	Collection       *mongo.Collection
+	BorrowCollection *mongo.Collection
 }
 
 // Database connection
@@ -132,6 +133,9 @@ type LibraryRepository interface {
 	UpdateLibrary(l Library) error
 
 	DeleteLibrary(id int) error
+
+	BorrowBook(info BorrowInfo) error
+	ReturnBook(info BorrowInfo) error
 }
 
 // Handler Repository Selectors
@@ -202,7 +206,7 @@ func College_Management_System() {
 	mongoLecturer := NewMongoDBLecturerRepo(mongodb.Collection("lecturers"))
 
 	mysqlLibrary := NewMySQLLibraryRepo(mysqlDB)
-	mongoLibrary := NewMongoDBLibraryRepo(mongodb.Collection("library"))
+	mongoLibrary := NewMongoDBLibraryRepo(mongodb.Collection("library"), mongodb.Collection("borrow_records"))
 
 	// Create handlers with dependencies
 	Studentshandler := &StudentHandler{MySQLRepo: mysqlStudent, MongoRepo: MongoStudent, Redis: redisClient}
@@ -214,26 +218,39 @@ func College_Management_System() {
 	// Initialize router
 	r := mux.NewRouter()
 
+	// Authentication routes
+	r.HandleFunc("/login", LoginHandler).Methods("POST")
+	r.HandleFunc("/refresh", RefreshHandler).Methods("POST")
+	r.HandleFunc("/logout", LogoutHandler).Methods("POST")
+
+	// Protected route
+	api := r.PathPrefix("/api").Subrouter()
+	api.Use(JwtMiddleware)
+
 	// Student routes
-	r.HandleFunc("/students", Studentshandler.CreateStudent).Methods("POST")
-	r.HandleFunc("/students", Studentshandler.GetAllStudent).Methods("GET")
-	r.HandleFunc("/students/{id}", Studentshandler.GetByIDStudent).Methods("GET")
-	r.HandleFunc("/students/{id}", Studentshandler.UpdateStudent).Methods("PUT")
-	r.HandleFunc("/students/{id}", Studentshandler.DeleteStudent).Methods("DELETE")
+	api.HandleFunc("/students", Studentshandler.CreateStudent).Methods("POST")
+	api.HandleFunc("/students", Studentshandler.GetAllStudent).Methods("GET")
+	api.HandleFunc("/students/{id}", Studentshandler.GetByIDStudent).Methods("GET")
+	api.HandleFunc("/students/{id}", Studentshandler.UpdateStudent).Methods("PUT")
+	api.HandleFunc("/students/{id}", Studentshandler.DeleteStudent).Methods("DELETE")
 
 	// Lecturer routes
-	r.HandleFunc("/lecturers", Lecturershandler.CreateLecturer).Methods("POST")
-	r.HandleFunc("/lecturers", Lecturershandler.GetAllLecturer).Methods("GET")
-	r.HandleFunc("/lecturers/{id}", Lecturershandler.GetByIDLectuurer).Methods("GET")
-	r.HandleFunc("/lecturers/{id}", Lecturershandler.UpdateLecturer).Methods("PUT")
-	r.HandleFunc("/lecturers/{id}", Lecturershandler.DeleteLecturer).Methods("DELETE")
+	api.HandleFunc("/lecturers", Lecturershandler.CreateLecturer).Methods("POST")
+	api.HandleFunc("/lecturers", Lecturershandler.GetAllLecturer).Methods("GET")
+	api.HandleFunc("/lecturers/{id}", Lecturershandler.GetByIDLectuurer).Methods("GET")
+	api.HandleFunc("/lecturers/{id}", Lecturershandler.UpdateLecturer).Methods("PUT")
+	api.HandleFunc("/lecturers/{id}", Lecturershandler.DeleteLecturer).Methods("DELETE")
 
 	// Library routes
-	r.HandleFunc("/libraries", Libraryshandler.CreateLibrary).Methods("POST")
-	r.HandleFunc("/libraries", Libraryshandler.GetAllLibrary).Methods("GET")
-	r.HandleFunc("/libraries/{id}", Libraryshandler.GetByIDLibrary).Methods("GET")
-	r.HandleFunc("/libraries/{id}", Libraryshandler.UpdateLibrary).Methods("PUT")
-	r.HandleFunc("/libraries/{id}", Libraryshandler.DeleteLibrary).Methods("DELETE")
+	api.HandleFunc("/libraries", Libraryshandler.CreateLibrary).Methods("POST")
+	api.HandleFunc("/libraries", Libraryshandler.GetAllLibrary).Methods("GET")
+	api.HandleFunc("/libraries/{id}", Libraryshandler.GetByIDLibrary).Methods("GET")
+	api.HandleFunc("/libraries/{id}", Libraryshandler.UpdateLibrary).Methods("PUT")
+	api.HandleFunc("/libraries/{id}", Libraryshandler.DeleteLibrary).Methods("DELETE")
+
+	// borrow and return routes
+	api.HandleFunc("/borrow", Libraryshandler.BorrowBookHandler).Methods("POST")
+	api.HandleFunc("/return", Libraryshandler.ReturnBookHandler).Methods("POST")
 
 	// Start HTTP server
 	fmt.Println("Server running on port:8080")
