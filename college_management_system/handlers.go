@@ -683,3 +683,69 @@ func (h *LibraryHandler) DeleteLibrary(w http.ResponseWriter, r *http.Request) {
 		"status": "deleted",
 	})
 }
+
+func (h *LibraryHandler) BorrowBookHandler(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+	db := r.URL.Query().Get("db")
+
+	if db != "mysql" && db != "mongo" {
+		http.Error(w, "Please specify ?db=mysql or ?db=mongo", http.StatusBadRequest)
+		return
+	}
+
+	repo := h.GetRepo(r)
+
+	var info BorrowInfo
+
+	err := json.NewDecoder(r.Body).Decode(&info)
+	if err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	// validate
+	if info.BookID == 0 || info.UserID == 0 {
+		http.Error(w, "book_id and user_id required", http.StatusBadRequest)
+		return
+	}
+	err = repo.BorrowBook(info)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "Book borrowed succesfully"})
+
+}
+
+func (h *LibraryHandler) ReturnBookHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	repo := h.GetRepo(r)
+
+	var info BorrowInfo
+
+	// Decode JSON
+	err := json.NewDecoder(r.Body).Decode(&info)
+	if err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	// validate
+	if info.BookID == 0 || info.UserID == 0 {
+		http.Error(w, "book_id and user_id required", http.StatusBadRequest)
+		return
+	}
+
+	// call repo
+	err = repo.ReturnBook(info)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "Book Returned successfully!"})
+}
