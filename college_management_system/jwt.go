@@ -136,7 +136,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if creds.Email != os.Getenv("EMAIL") || creds.Password != os.Getenv("PASSWORD") {
-		http.Error(w, "invalid credentials", http.StatusInternalServerError)
+		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
