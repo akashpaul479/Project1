@@ -8,10 +8,13 @@ import (
 	"net/http"
 	"os"
 
+	_ "college_management_system/docs"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -176,6 +179,24 @@ func (h *LibraryHandler) GetRepo(r *http.Request) LibraryRepository {
 	return h.MySQLRepo
 }
 
+// @title College Management System API
+// @version 1.0
+// @description REST API for College Management System
+// @termsOfService http://example.com/terms/
+
+// @contact.name Akash Paul
+// @contact.email akashpaul@gmail.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 // College_Management_System initializes all services
 // and starts HTTP server
 func College_Management_System() {
@@ -217,6 +238,9 @@ func College_Management_System() {
 
 	// Initialize router
 	r := mux.NewRouter()
+
+	// Swagger route
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	// Authentication routes
 	r.HandleFunc("/login", LoginHandler).Methods("POST")
