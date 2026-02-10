@@ -1,0 +1,562 @@
+definitions:
+  collegemanagementsystem.BorrowInfo:
+    properties:
+      book_id:
+        type: integer
+      borrow_date:
+        type: string
+      borrow_id:
+        type: integer
+      return_date:
+        type: string
+      user_id:
+        type: integer
+      user_type:
+        type: string
+    type: object
+  collegemanagementsystem.Credentials:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  collegemanagementsystem.Lecturer:
+    properties:
+      age:
+        type: integer
+      designation:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  collegemanagementsystem.Library:
+    properties:
+      author:
+        type: string
+      available_copies:
+        type: integer
+      book_id:
+        type: integer
+      book_name:
+        type: string
+      title:
+        type: string
+    type: object
+  collegemanagementsystem.Student:
+    properties:
+      age:
+        type: integer
+      dept:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/Libraries/{id}:
+    get:
+      parameters:
+      - description: Library ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Database type
+        in: query
+        name: db
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collegemanagementsystem.Library'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get library by ID
+      tags:
+      - Library
+  /api/borrow:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Borrow Info
+        in: body
+        name: borrow
+        required: true
+        schema:
+          $ref: '#/definitions/collegemanagementsystem.BorrowInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Borrow a book
+      tags:
+      - Library
+  /api/lecturers:
+    get:
+      parameters:
+      - description: Database type (mysql/mongo)
+        in: query
+        name: db
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/collegemanagementsystem.Lecturer'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all lecturers
+      tags:
+      - Lecturers
+    post:
+      consumes:
+      - application/json
+      description: Add a lecturer to MySQL or MongoDB
+      parameters:
+      - description: Database type (mysql/mongo)
+        in: query
+        name: db
+        type: string
+      - description: Lecturer Data
+        in: body
+        name: lecturer
+        required: true
+        schema:
+          $ref: '#/definitions/collegemanagementsystem.Lecturer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collegemanagementsystem.Lecturer'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new lecturer
+      tags:
+      - Lecturers
+  /api/lecturers/{id}:
+    delete:
+      parameters:
+      - description: Lecturer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete lecturer
+      tags:
+      - Lecturers
+    get:
+      parameters:
+      - description: Lecturer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Database type
+        in: query
+        name: db
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collegemanagementsystem.Lecturer'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get lecturer by ID
+      tags:
+      - Lecturers
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Updated Lecturer
+        in: body
+        name: lecturer
+        required: true
+        schema:
+          $ref: '#/definitions/collegemanagementsystem.Lecturer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collegemanagementsystem.Lecturer'
+      security:
+      - BearerAuth: []
+      summary: Update lecturer
+      tags:
+      - Lecturers
+  /api/libraries:
+    get:
+      parameters:
+      - description: Database type (mysql/mongo)
+        in: query
+        name: db
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/collegemanagementsystem.Library'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all library
+      tags:
+      - Library
+    post:
+      consumes:
+      - application/json
+      description: Add a library to MySQL or MongoDB
+      parameters:
+      - description: Database type (mysql/mongo)
+        in: query
+        name: db
+        type: string
+      - description: Library Data
+        in: body
+        name: library
+        required: true
+        schema:
+          $ref: '#/definitions/collegemanagementsystem.Library'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collegemanagementsystem.Library'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new library
+      tags:
+      - Library
+  /api/libraries/{id}:
+    delete:
+      parameters:
+      - description: Library ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete library
+      tags:
+      - Library
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Updated Library
+        in: body
+        name: library
+        required: true
+        schema:
+          $ref: '#/definitions/collegemanagementsystem.Library'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collegemanagementsystem.Library'
+      security:
+      - BearerAuth: []
+      summary: Update library
+      tags:
+      - Library
+  /api/return:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Return Info
+        in: body
+        name: return
+        required: true
+        schema:
+          $ref: '#/definitions/collegemanagementsystem.BorrowInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Return book
+      tags:
+      - Library
+  /api/students:
+    get:
+      parameters:
+      - description: Database type (mysql/mongo)
+        in: query
+        name: db
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/collegemanagementsystem.Student'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all students
+      tags:
+      - Students
+    post:
+      consumes:
+      - application/json
+      description: Add a student to MySQL or MongoDB
+      parameters:
+      - description: Database type (mysql/mongo)
+        in: query
+        name: db
+        type: string
+      - description: Student Data
+        in: body
+        name: student
+        required: true
+        schema:
+          $ref: '#/definitions/collegemanagementsystem.Student'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collegemanagementsystem.Student'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new student
+      tags:
+      - Students
+  /api/students/{id}:
+    delete:
+      parameters:
+      - description: Student ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete student
+      tags:
+      - Students
+    get:
+      parameters:
+      - description: Student ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Database type
+        in: query
+        name: db
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collegemanagementsystem.Student'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get student by ID
+      tags:
+      - Students
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Updated Student
+        in: body
+        name: student
+        required: true
+        schema:
+          $ref: '#/definitions/collegemanagementsystem.Student'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collegemanagementsystem.Student'
+      security:
+      - BearerAuth: []
+      summary: Update student
+      tags:
+      - Students
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT tokens in cookies
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/collegemanagementsystem.Credentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user
+      tags:
+      - Authentication
+  /logout:
+    post:
+      description: Logout and clear JWT cookies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout user
+      tags:
+      - Authentication
+  /refresh:
+    post:
+      description: Generate new access token using refresh token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh access token
+      tags:
+      - Authentication
+swagger: "2.0"
