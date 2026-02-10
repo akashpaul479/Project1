@@ -102,6 +102,19 @@ func ValidateLibrary(l Library) error {
 	return nil
 }
 
+// CreateStudent godoc
+// @Summary Create a new student
+// @Description Add a student to MySQL or MongoDB
+// @Tags Students
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param db query string false "Database type (mysql/mongo)"
+// @Param student body Student true "Student Data"
+// @Success 200 {object} Student
+// @Failure 400 {object} string
+// @Failure 500 {object} string
+// @Router /api/students [post]
 // CreateStudent handles POST / students
 // It creates a student in MySQL or MongoDB and clears Redis cache
 func (h *StudentHandler) CreateStudent(w http.ResponseWriter, r *http.Request) {
@@ -138,6 +151,14 @@ func (h *StudentHandler) CreateStudent(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
+// GetAllStudent godoc
+// @Summary Get all students
+// @Tags Students
+// @Security BearerAuth
+// @Produce json
+// @Param db query string false "Database type (mysql/mongo)"
+// @Success 200 {array} Student
+// @Router /api/students [get]
 // ReadAllStudents handles GET / students
 // It first checks redis cache, if  not found , queries DB and store in redis
 func (h *StudentHandler) GetAllStudent(w http.ResponseWriter, r *http.Request) {
@@ -181,6 +202,16 @@ func (h *StudentHandler) GetAllStudent(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
+// GetByIDStudent godoc
+// @Summary Get student by ID
+// @Tags Students
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Student ID"
+// @Param db query string false "Database type"
+// @Success 200 {object} Student
+// @Failure 400 {string} string
+// @Router /api/students/{id} [get]
 // ReadBYIDstudents handles GET /students /{id}
 func (h *StudentHandler) GetByIDStudent(w http.ResponseWriter, r *http.Request) {
 
@@ -229,6 +260,15 @@ func (h *StudentHandler) GetByIDStudent(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(data)
 }
 
+// UpdateeStudent godoc
+// @Summary Update student
+// @Tags Students
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param student body Student true "Updated Student"
+// @Success 200 {object} Student
+// @Router /api/students/{id} [put]
 // UpdateStudent handles PUT / students /{id}
 func (h *StudentHandler) UpdateStudent(w http.ResponseWriter, r *http.Request) {
 
@@ -266,6 +306,13 @@ func (h *StudentHandler) UpdateStudent(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// DeleteStudent godoc
+// @Summary Delete student
+// @Tags Students
+// @Security BearerAuth
+// @Param id path int true "Student ID"
+// @Success 200 {object} map[string]string
+// @Router /api/students/{id} [delete]
 // DeleteStudent handles DELETE / students /{id}
 func (h *StudentHandler) DeleteStudent(w http.ResponseWriter, r *http.Request) {
 
@@ -293,6 +340,19 @@ func (h *StudentHandler) DeleteStudent(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// CreateLecturer godoc
+// @Summary Create a new lecturer
+// @Description Add a lecturer to MySQL or MongoDB
+// @Tags Lecturers
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param db query string false "Database type (mysql/mongo)"
+// @Param lecturer body Lecturer true "Lecturer Data"
+// @Success 200 {object} Lecturer
+// @Failure 400 {object} string
+// @Failure 500 {object} string
+// @Router /api/lecturers [post]
 // CreateLecturers handles POST /lecturers
 // It creates a lecturers in MySQL or MongoDB
 // and clears Redis cache
@@ -328,6 +388,14 @@ func (h *LecturerHandler) CreateLecturer(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(data)
 }
 
+// GetAllLecturer godoc
+// @Summary Get all lecturers
+// @Tags Lecturers
+// @Security BearerAuth
+// @Produce json
+// @Param db query string false "Database type (mysql/mongo)"
+// @Success 200 {array} Lecturer
+// @Router /api/lecturers [get]
 // GetAllLecturers handles GET /lecturers
 // It first checks Redis cache,
 // if not found, queries DB and stores in Redis
@@ -373,6 +441,16 @@ func (h *LecturerHandler) GetAllLecturer(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(data)
 }
 
+// GetByIDLecturer godoc
+// @Summary Get lecturer by ID
+// @Tags Lecturers
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Lecturer ID"
+// @Param db query string false "Database type"
+// @success 200 {object} Lecturer
+// @Failure 400 {string} string
+// @Router /api/lecturers/{id} [get]
 // GetByIDLectrurer handles GET /lecturer/{id}
 // It uses Redis cache for faster access
 func (h *LecturerHandler) GetByIDLectuurer(w http.ResponseWriter, r *http.Request) {
@@ -425,6 +503,15 @@ func (h *LecturerHandler) GetByIDLectuurer(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(data)
 }
 
+// UpdateLecturer godoc
+// @Summary Update lecturer
+// @Tags Lecturers
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param lecturer body Lecturer true "Updated Lecturer"
+// @Success 200 {object} Lecturer
+// @Router /api/lecturers/{id} [put]
 // UpdateLecturer handles PUT / lecturers /{id}
 func (h *LecturerHandler) UpdateLecturer(w http.ResponseWriter, r *http.Request) {
 
@@ -462,6 +549,13 @@ func (h *LecturerHandler) UpdateLecturer(w http.ResponseWriter, r *http.Request)
 	})
 }
 
+// DeleteLecturer godoc
+// @Summary Delete lecturer
+// @Tags Lecturers
+// @Security BearerAuth
+// @Param id path int true "Lecturer ID"
+// @Success 200 {object} map[string]string
+// @Router /api/lecturers/{id} [delete]
 // DeleteLecturer handles DELETE / lecturers /{id}
 func (h *LecturerHandler) DeleteLecturer(w http.ResponseWriter, r *http.Request) {
 
@@ -489,6 +583,19 @@ func (h *LecturerHandler) DeleteLecturer(w http.ResponseWriter, r *http.Request)
 	})
 }
 
+// CreateLibrary godoc
+// @Summary Create a new library
+// @Description Add a library to MySQL or MongoDB
+// @Tags Library
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param db query string false "Database type (mysql/mongo)"
+// @Param library body Library true "Library Data"
+// @Success 200 {object} Library
+// @Failure 400 {object} string
+// @Failure 500 {object} string
+// @Router /api/libraries [post]
 // CreateLibrary handles POST / library
 // It creates a library in MySQL or MongoDB and clears Redis cache
 func (h *LibraryHandler) CreateLibrary(w http.ResponseWriter, r *http.Request) {
@@ -526,6 +633,14 @@ func (h *LibraryHandler) CreateLibrary(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
+// GetAllLibrary godoc
+// @Summary Get all library
+// @Tags Library
+// @Security BearerAuth
+// @Produce json
+// @Param db query string false "Database type (mysql/mongo)"
+// @Success 200 {array} Library
+// @Router /api/libraries [get]
 // ReadAllLibrary handles GET / Library
 // It first checks redis cache, if  not found , queries DB and store in redis
 func (h *LibraryHandler) GetAllLibrary(w http.ResponseWriter, r *http.Request) {
@@ -569,6 +684,16 @@ func (h *LibraryHandler) GetAllLibrary(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
+// GetByIDLibrary godoc
+// @Summary Get library by ID
+// @Tags Library
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Library ID"
+// @Param db query string false "Database type"
+// @success 200 {object} Library
+// @Failure 400 {string} string
+// @Router /api/Libraries/{id} [get]
 // ReadBYIDLibrary handles GET /libraries /{id}
 func (h *LibraryHandler) GetByIDLibrary(w http.ResponseWriter, r *http.Request) {
 
@@ -617,6 +742,15 @@ func (h *LibraryHandler) GetByIDLibrary(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(data)
 }
 
+// UpdateLibrary godoc
+// @Summary Update library
+// @Tags Library
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param library body Library true "Updated Library"
+// @Success 200 {object} Library
+// @Router /api/libraries/{id} [put]
 // UpdateStudent handles PUT / students /{id}
 func (h *LibraryHandler) UpdateLibrary(w http.ResponseWriter, r *http.Request) {
 
@@ -655,6 +789,13 @@ func (h *LibraryHandler) UpdateLibrary(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// DeleteLibrary godoc
+// @Summary Delete library
+// @Tags Library
+// @Security BearerAuth
+// @Param id path int true "Library ID"
+// @Success 200 {object} map[string]string
+// @Router /api/libraries/{id} [delete]
 // DeleteLibraries handles DELETE / libraries /{id}
 func (h *LibraryHandler) DeleteLibrary(w http.ResponseWriter, r *http.Request) {
 
@@ -684,68 +825,99 @@ func (h *LibraryHandler) DeleteLibrary(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// BorrowBookHandler godoc
+// @Summary Borrow a book
+// @Tags Library
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param borrow body BorrowInfo true "Borrow Info"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string
+// @Router /api/borrow [post]
+// BorrowBookHandler handles borrowing a book request.
 func (h *LibraryHandler) BorrowBookHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Set response content type to JSON
 	w.Header().Set("Content-Type", "application/json")
 
+	// Check which database to use (mysql or mongo)
 	db := r.URL.Query().Get("db")
-
 	if db != "mysql" && db != "mongo" {
 		http.Error(w, "Please specify ?db=mysql or ?db=mongo", http.StatusBadRequest)
 		return
 	}
 
+	// Get repository implementation based on request (MySQL or Mongo)
 	repo := h.GetRepo(r)
 
 	var info BorrowInfo
 
+	// Decode JSON request body into BorrowInfo struct
 	err := json.NewDecoder(r.Body).Decode(&info)
 	if err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
-	// validate
+	// Validate required fields
 	if info.BookID == 0 || info.UserID == 0 {
 		http.Error(w, "book_id and user_id required", http.StatusBadRequest)
 		return
 	}
+
+	// Call repository method to borrow the book
 	err = repo.BorrowBook(info)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// Send response
 	json.NewEncoder(w).Encode(map[string]string{"message": "Book borrowed succesfully"})
 
 }
 
+// ReturnBookHandler godoc
+// @Summary Return book
+// @Tags Library
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param return body BorrowInfo true "Return Info"
+// @Success 200 {object} map[string]string
+// @Router /api/return [post]
+
 func (h *LibraryHandler) ReturnBookHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Set response content type to JSON
 	w.Header().Set("Content-Type", "application/json")
 
+	// Get repository implementation (MySQL or Mongo)
 	repo := h.GetRepo(r)
 
 	var info BorrowInfo
 
-	// Decode JSON
+	// Decode JSON request body into BorrowInfo struct
 	err := json.NewDecoder(r.Body).Decode(&info)
 	if err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
-	// validate
+	// Validate required fields
 	if info.BookID == 0 || info.UserID == 0 {
 		http.Error(w, "book_id and user_id required", http.StatusBadRequest)
 		return
 	}
 
-	// call repo
+	// Call repository method to return the book
 	err = repo.ReturnBook(info)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// Send response
 	json.NewEncoder(w).Encode(map[string]string{"message": "Book Returned successfully!"})
 }
