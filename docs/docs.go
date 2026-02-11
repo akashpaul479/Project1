@@ -15,51 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/Libraries/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Library"
-                ],
-                "summary": "Get library by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Library ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Database type",
-                        "name": "db",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/collegemanagementsystem.Library"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/api/borrow": {
             "post": {
                 "security": [
@@ -74,10 +29,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Library"
+                    "Borrow_Return"
                 ],
                 "summary": "Borrow a book",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Database type: mysql or mongo",
+                        "name": "db",
+                        "in": "query",
+                        "required": true
+                    },
                     {
                         "description": "Borrow Info",
                         "name": "borrow",
@@ -322,7 +284,7 @@ const docTemplate = `{
                 "tags": [
                     "Library"
                 ],
-                "summary": "Get all library",
+                "summary": "Get all librarybook",
                 "parameters": [
                     {
                         "type": "string",
@@ -349,7 +311,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Add a library to MySQL or MongoDB",
+                "description": "Add a librarybook to MySQL or MongoDB",
                 "consumes": [
                     "application/json"
                 ],
@@ -359,7 +321,7 @@ const docTemplate = `{
                 "tags": [
                     "Library"
                 ],
-                "summary": "Create a new library",
+                "summary": "Create a new librarybook",
                 "parameters": [
                     {
                         "type": "string",
@@ -400,6 +362,49 @@ const docTemplate = `{
             }
         },
         "/api/libraries/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Library"
+                ],
+                "summary": "Get librarybook by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Library ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Database type",
+                        "name": "db",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/collegemanagementsystem.Library"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -415,7 +420,7 @@ const docTemplate = `{
                 "tags": [
                     "Library"
                 ],
-                "summary": "Update library",
+                "summary": "Update librarybook",
                 "parameters": [
                     {
                         "description": "Updated Library",
@@ -445,7 +450,7 @@ const docTemplate = `{
                 "tags": [
                     "Library"
                 ],
-                "summary": "Delete library",
+                "summary": "Delete librarybook",
                 "parameters": [
                     {
                         "type": "integer",
@@ -482,10 +487,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Library"
+                    "Borrow_Return"
                 ],
-                "summary": "Return book",
+                "summary": "Return a book",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Database type: mysql or mongo",
+                        "name": "db",
+                        "in": "query",
+                        "required": true
+                    },
                     {
                         "description": "Return Info",
                         "name": "return",
@@ -504,6 +516,18 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }

@@ -63,39 +63,16 @@ definitions:
 info:
   contact: {}
 paths:
-  /api/Libraries/{id}:
-    get:
-      parameters:
-      - description: Library ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Database type
-        in: query
-        name: db
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/collegemanagementsystem.Library'
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get library by ID
-      tags:
-      - Library
   /api/borrow:
     post:
       consumes:
       - application/json
       parameters:
+      - description: 'Database type: mysql or mongo'
+        in: query
+        name: db
+        required: true
+        type: string
       - description: Borrow Info
         in: body
         name: borrow
@@ -119,7 +96,7 @@ paths:
       - BearerAuth: []
       summary: Borrow a book
       tags:
-      - Library
+      - Borrow_Return
   /api/lecturers:
     get:
       parameters:
@@ -263,13 +240,13 @@ paths:
             type: array
       security:
       - BearerAuth: []
-      summary: Get all library
+      summary: Get all librarybook
       tags:
       - Library
     post:
       consumes:
       - application/json
-      description: Add a library to MySQL or MongoDB
+      description: Add a librarybook to MySQL or MongoDB
       parameters:
       - description: Database type (mysql/mongo)
         in: query
@@ -298,7 +275,7 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Create a new library
+      summary: Create a new librarybook
       tags:
       - Library
   /api/libraries/{id}:
@@ -318,7 +295,34 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Delete library
+      summary: Delete librarybook
+      tags:
+      - Library
+    get:
+      parameters:
+      - description: Library ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Database type
+        in: query
+        name: db
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collegemanagementsystem.Library'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get librarybook by ID
       tags:
       - Library
     put:
@@ -340,7 +344,7 @@ paths:
             $ref: '#/definitions/collegemanagementsystem.Library'
       security:
       - BearerAuth: []
-      summary: Update library
+      summary: Update librarybook
       tags:
       - Library
   /api/return:
@@ -348,6 +352,11 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: 'Database type: mysql or mongo'
+        in: query
+        name: db
+        required: true
+        type: string
       - description: Return Info
         in: body
         name: return
@@ -363,11 +372,19 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
       security:
       - BearerAuth: []
-      summary: Return book
+      summary: Return a book
       tags:
-      - Library
+      - Borrow_Return
   /api/students:
     get:
       parameters:
