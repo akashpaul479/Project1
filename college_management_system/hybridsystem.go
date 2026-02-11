@@ -7,16 +7,18 @@ import (
 	"log"
 	"net/http"
 	"os"
-
-	_ "college_management_system/docs"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
-	httpSwagger "github.com/swaggo/http-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	_ "college_management_system/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // MySQLStudentRepo implements StudentRepository using MySQL
@@ -177,6 +179,17 @@ func (h *LibraryHandler) GetRepo(r *http.Request) LibraryRepository {
 
 	// default
 	return h.MySQLRepo
+}
+
+// Background Utilities
+// Logging (gouroutine safe)
+func LogActivity(action, actor string) {
+	log.Printf("[LOG] %s by %s at %s\n", action, actor, time.Now())
+}
+
+// Audit Trail
+func AuditLog(action, entity string, id any, actor string) {
+	log.Printf("[AUDIT] avtion=%s, entity=%s , id=%v , actor=%s , time=%s\n", action, entity, id, actor, time.Now())
 }
 
 // @title College Management System API
