@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -39,16 +40,24 @@ type LibraryHandler struct {
 // validateStudents validates incoming students data
 func ValidateStudent(s Student) error {
 	// validate name
-	if s.Name == "" {
-		return fmt.Errorf("name required")
+	// Name validation
+	if strings.TrimSpace(s.Name) == "" {
+		return fmt.Errorf("Empty name or invalid name")
 	}
 	// validate age
 	if s.Age <= 0 {
 		return fmt.Errorf("invalid age")
 	}
-	// validate email
-	if s.Email == "" {
-		return fmt.Errorf("email required")
+	// Email validation
+	if strings.TrimSpace(s.Email) == "" {
+		return fmt.Errorf("Empty email or invalid email")
+	}
+	if !strings.HasSuffix(s.Email, "@gmail.com") {
+		return fmt.Errorf("email is invalid and does not contains @gmail.com")
+	}
+	prefix := strings.TrimSuffix(s.Email, "@gmail.com")
+	if prefix == "" {
+		return fmt.Errorf("email must contains a prefix before @gmail.com")
 	}
 	// validate dept
 	if s.Dept == "" {
@@ -146,6 +155,16 @@ func (h *StudentHandler) CreateStudent(w http.ResponseWriter, r *http.Request) {
 	h.Redis.Del(Ctx, "students:mysql")
 	h.Redis.Del(Ctx, "students:mongo")
 
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Lod activity and Audit trail
+	go LogActivity("CREATE_STUDENT", actor)
+	go AuditLog("CREATE", "STUDENT", data.ID, actor)
+
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
@@ -224,6 +243,15 @@ func (h *StudentHandler) GetByIDStudent(w http.ResponseWriter, r *http.Request) 
 	// Create cache key
 	key := "student:" + db + ":" + id
 
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Log Get activity
+	go LogActivity("GET_STUDENT", actor)
+
 	// Check redis
 	val, err := h.Redis.Get(Ctx, key).Result()
 	if err == nil {
@@ -299,6 +327,16 @@ func (h *StudentHandler) UpdateStudent(w http.ResponseWriter, r *http.Request) {
 	h.Redis.Del(Ctx, "students:mysql")
 	h.Redis.Del(Ctx, "students:mongo")
 
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Lod activity and Audit trail
+	go LogActivity("UPDATE_STUDENT", actor)
+	go AuditLog("UPDATE", "STUDENT", s.ID, actor)
+
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -332,6 +370,16 @@ func (h *StudentHandler) DeleteStudent(w http.ResponseWriter, r *http.Request) {
 	// clear redis cache after write operations
 	h.Redis.Del(Ctx, "students:mysql")
 	h.Redis.Del(Ctx, "students:mongo")
+
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Log delete response
+	go LogActivity("DELETE_STUDENTS", actor)
+	go AuditLog("DELETE", "STUDENT", id, actor)
 
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
@@ -382,6 +430,16 @@ func (h *LecturerHandler) CreateLecturer(w http.ResponseWriter, r *http.Request)
 	// Clear cache
 	h.Redis.Del(Ctx, "lecturers:mysql")
 	h.Redis.Del(Ctx, "lecturers:mongo")
+
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Log activity and Audit trail
+	go LogActivity("CREATE_LECTURER", actor)
+	go AuditLog("CREATE", "LECTURER", data.ID, actor)
 
 	// Send respponse
 	w.Header().Set("Content-Type", "application/json")
@@ -464,6 +522,15 @@ func (h *LecturerHandler) GetByIDLectuurer(w http.ResponseWriter, r *http.Reques
 	// Create cache key
 	key := "lecturer:" + db + ":" + id
 
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Log GET By ID response
+	go LogActivity("GET_LECTURER", actor)
+
 	// Check Redis
 	val, err := h.Redis.Get(Ctx, key).Result()
 	if err == nil {
@@ -542,6 +609,16 @@ func (h *LecturerHandler) UpdateLecturer(w http.ResponseWriter, r *http.Request)
 	h.Redis.Del(Ctx, "lecturers:mysql")
 	h.Redis.Del(Ctx, "lecturers:mongo")
 
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Log activity and Audit trail
+	go LogActivity("UPDATE_LECTURER", actor)
+	go AuditLog("UPDATE", "LECTURER", l.ID, actor)
+
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -576,6 +653,16 @@ func (h *LecturerHandler) DeleteLecturer(w http.ResponseWriter, r *http.Request)
 	h.Redis.Del(Ctx, "lecturers:mysql")
 	h.Redis.Del(Ctx, "lecturers:mongo")
 
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Log activity and Audit trail
+	go LogActivity("DELETE_LECTURER", actor)
+	go AuditLog("DELETE", "LECTURER", id, actor)
+
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -584,8 +671,8 @@ func (h *LecturerHandler) DeleteLecturer(w http.ResponseWriter, r *http.Request)
 }
 
 // CreateLibrary godoc
-// @Summary Create a new library
-// @Description Add a library to MySQL or MongoDB
+// @Summary Create a new librarybook
+// @Description Add a librarybook to MySQL or MongoDB
 // @Tags Library
 // @Security BearerAuth
 // @Accept json
@@ -628,13 +715,23 @@ func (h *LibraryHandler) CreateLibrary(w http.ResponseWriter, r *http.Request) {
 	h.Redis.Del(Ctx, "libraries:"+db)
 	h.Redis.Del(Ctx, "libraries:"+db+":"+strconv.Itoa(l.Book_id))
 
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Log activity and Audit trail
+	go LogActivity("CREATE_LIBRARY", actor)
+	go AuditLog("CREATE", "LIBRARY", data.Book_id, actor)
+
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
 
 // GetAllLibrary godoc
-// @Summary Get all library
+// @Summary Get all librarybook
 // @Tags Library
 // @Security BearerAuth
 // @Produce json
@@ -685,7 +782,7 @@ func (h *LibraryHandler) GetAllLibrary(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetByIDLibrary godoc
-// @Summary Get library by ID
+// @Summary Get librarybook by ID
 // @Tags Library
 // @Security BearerAuth
 // @Produce json
@@ -693,7 +790,7 @@ func (h *LibraryHandler) GetAllLibrary(w http.ResponseWriter, r *http.Request) {
 // @Param db query string false "Database type"
 // @success 200 {object} Library
 // @Failure 400 {string} string
-// @Router /api/Libraries/{id} [get]
+// @Router /api/libraries/{id} [get]
 // ReadBYIDLibrary handles GET /libraries /{id}
 func (h *LibraryHandler) GetByIDLibrary(w http.ResponseWriter, r *http.Request) {
 
@@ -705,6 +802,14 @@ func (h *LibraryHandler) GetByIDLibrary(w http.ResponseWriter, r *http.Request) 
 
 	// Create cache key
 	key := "library:" + db + ":" + id
+
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+	// Log activity and Audit trail
+	go LogActivity("GET_LIBRARY", actor)
 
 	// Check redis
 	val, err := h.Redis.Get(Ctx, key).Result()
@@ -743,7 +848,7 @@ func (h *LibraryHandler) GetByIDLibrary(w http.ResponseWriter, r *http.Request) 
 }
 
 // UpdateLibrary godoc
-// @Summary Update library
+// @Summary Update librarybook
 // @Tags Library
 // @Security BearerAuth
 // @Accept json
@@ -782,6 +887,16 @@ func (h *LibraryHandler) UpdateLibrary(w http.ResponseWriter, r *http.Request) {
 	h.Redis.Del(Ctx, "libraries:"+db)
 	h.Redis.Del(Ctx, "libraries:"+db+":"+strconv.Itoa(l.Book_id))
 
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Log activity and Audit trail
+	go LogActivity("UPDATE_LIBRARY", actor)
+	go AuditLog("UPDATE", "LIBRARY", l.Book_id, actor)
+
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -790,7 +905,7 @@ func (h *LibraryHandler) UpdateLibrary(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteLibrary godoc
-// @Summary Delete library
+// @Summary Delete librarybook
 // @Tags Library
 // @Security BearerAuth
 // @Param id path int true "Library ID"
@@ -818,6 +933,16 @@ func (h *LibraryHandler) DeleteLibrary(w http.ResponseWriter, r *http.Request) {
 	h.Redis.Del(Ctx, "libraries:"+db)
 	h.Redis.Del(Ctx, "libraries:"+db+":"+strconv.Itoa(l.Book_id))
 
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Log activity and Audit trail
+	go LogActivity("DELETE_LIBRARY", actor)
+	go AuditLog("DELETE", "LIBRARY", l.Book_id, actor)
+
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -827,10 +952,11 @@ func (h *LibraryHandler) DeleteLibrary(w http.ResponseWriter, r *http.Request) {
 
 // BorrowBookHandler godoc
 // @Summary Borrow a book
-// @Tags Library
+// @Tags Borrow_Return
 // @Security BearerAuth
 // @Accept json
 // @Produce json
+// @Param db query string true "Database type: mysql or mongo"
 // @Param borrow body BorrowInfo true "Borrow Info"
 // @Success 200 {object} map[string]string
 // @Failure 400 {string} string
@@ -873,21 +999,33 @@ func (h *LibraryHandler) BorrowBookHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
+
+	// Log activity and Audit trail
+	go LogActivity("BORROW_RECORDS", actor)
+	go AuditLog("BORROW", "RECORDS", info.BookID, actor)
+
 	// Send response
 	json.NewEncoder(w).Encode(map[string]string{"message": "Book borrowed succesfully"})
 
 }
 
 // ReturnBookHandler godoc
-// @Summary Return book
-// @Tags Library
+// @Summary Return a book
+// @Tags Borrow_Return
 // @Security BearerAuth
 // @Accept json
 // @Produce json
+// @Param db query string true "Database type: mysql or mongo"
 // @Param return body BorrowInfo true "Return Info"
 // @Success 200 {object} map[string]string
+// @Failure 400 {string} string
+// @Failure 401 {string} string
 // @Router /api/return [post]
-
 func (h *LibraryHandler) ReturnBookHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Set response content type to JSON
@@ -917,7 +1055,15 @@ func (h *LibraryHandler) ReturnBookHandler(w http.ResponseWriter, r *http.Reques
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	// ✅ Get logged-in user
+	actor := r.Header.Get("X-User-Email")
+	if actor == "" {
+		actor = "unknown"
+	}
 
+	// Log activity and Audit trail
+	go LogActivity("RETURN_RECORDS", actor)
+	go AuditLog("RETURN", "RECORDS", info.BookID, actor)
 	// Send response
 	json.NewEncoder(w).Encode(map[string]string{"message": "Book Returned successfully!"})
 }
