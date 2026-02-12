@@ -3,6 +3,7 @@ package collegemanagementsystem
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -104,12 +105,19 @@ func (m *MySQLLecturerRepo) UpdateLecturer(l Lecturer) error {
 // DeleteLecturer removes a lecturer record from MySQL by ID
 func (m *MySQLLecturerRepo) DeleteLecturer(id int) error {
 
-	_, err := m.DB.Exec(
+	res, err := m.DB.Exec(
 		"DELETE FROM lecturers WHERE id=?",
 		id,
 	)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if rows == 0 {
+		return errors.New("Lecturer not found")
+	}
 
-	return err
+	return nil
 }
 
 // MongoDB Implementation of LecturerRepository
@@ -166,10 +174,16 @@ func (m *MongoDBLecturerRepo) UpdateLecturer(l Lecturer) error {
 // DeleteLecturer removes a lecturer document from MongoDB by ID.
 func (m *MongoDBLecturerRepo) DeleteLecturer(id int) error {
 
-	_, err := m.Collection.DeleteOne(
+	res, err := m.Collection.DeleteOne(
 		context.TODO(),
 		bson.M{"id": id},
 	)
+	if err != nil {
+		return err
+	}
+	if res.DeletedCount == 0 {
+		return errors.New("Lecturer not found ")
+	}
 
-	return err
+	return nil
 }
