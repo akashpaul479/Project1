@@ -3,6 +3,7 @@ package collegemanagementsystem
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -105,12 +106,18 @@ func (m *MySQLStudentRepo) UpdateStudent(s Student) error {
 // DeleteStudent removes a student record from MySQL by ID.
 func (m *MySQLStudentRepo) DeleteStudent(id int) error {
 
-	_, err := m.DB.Exec(
+	res, err := m.DB.Exec(
 		"DELETE FROM students WHERE id=?",
 		id,
 	)
-
-	return err
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if rows == 0 {
+		return errors.New("Student not found ")
+	}
+	return nil
 }
 
 // MongoDB Implementation of StudentRepository
@@ -167,10 +174,16 @@ func (m *MongoDBStudentRepo) UpdateStudent(s Student) error {
 // DeleteStudent removes a student document from MongoDB by ID
 func (m *MongoDBStudentRepo) DeleteStudent(id int) error {
 
-	_, err := m.Collection.DeleteOne(
+	res, err := m.Collection.DeleteOne(
 		context.TODO(),
 		bson.M{"id": id},
 	)
+	if err != nil {
+		return err
+	}
+	if res.DeletedCount == 0 {
+		return errors.New("Student not found")
+	}
 
-	return err
+	return nil
 }
