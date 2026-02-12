@@ -240,7 +240,7 @@ func College_Management_System() {
 	mongoLecturer := NewMongoDBLecturerRepo(mongodb.Collection("lecturers"))
 
 	mysqlLibrary := NewMySQLLibraryRepo(mysqlDB)
-	mongoLibrary := NewMongoDBLibraryRepo(mongodb.Collection("library"), mongodb.Collection("borrow_records"))
+	mongoLibrary := NewMongoDBLibraryRepo(mongodb.Collection("libraries"), mongodb.Collection("borrow_records"))
 
 	// Create handlers with dependencies
 	Studentshandler := &StudentHandler{MySQLRepo: mysqlStudent, MongoRepo: MongoStudent, Redis: redisClient}
