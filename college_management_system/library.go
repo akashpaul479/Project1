@@ -120,10 +120,17 @@ func (m *MySQLLibraryRepo) UpdateLibrary(l Library) error {
 // DeleteLibrary removes a Libraries record from MySQL by ID.
 func (m *MySQLLibraryRepo) DeleteLibrary(id int) error {
 
-	_, err := m.DB.Exec(
+	res, err := m.DB.Exec(
 		"DELETE FROM libraries WHERE book_id=?",
 		id,
 	)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if rows == 0 {
+		return errors.New("Librarybook not found")
+	}
 
 	return err
 }
@@ -182,12 +189,18 @@ func (m *MongoDBLibraryRepo) UpdateLibrary(l Library) error {
 // DeleteLibrary removes a libraries document from MongoDB by ID
 func (m *MongoDBLibraryRepo) DeleteLibrary(id int) error {
 
-	_, err := m.Collection.DeleteOne(
+	res, err := m.Collection.DeleteOne(
 		context.TODO(),
 		bson.M{"book_id": id},
 	)
+	if err != nil {
+		return err
+	}
+	if res.DeletedCount == 0 {
+		return errors.New("Librarybook not found")
+	}
 
-	return err
+	return nil
 }
 
 // BorrowBook borrow books from libraries
