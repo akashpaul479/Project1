@@ -70,16 +70,24 @@ func ValidateStudent(s Student) error {
 // validateLecturer validates incoming lecturers data
 func ValidateLecturer(l Lecturer) error {
 	// validate name
-	if l.Name == "" {
-		return fmt.Errorf("name required")
+	// Name validation
+	if strings.TrimSpace(l.Name) == "" {
+		return fmt.Errorf("Empty name or invalid name")
 	}
 	// validate age
 	if l.Age <= 0 {
 		return fmt.Errorf("invalid age")
 	}
-	// validate email
-	if l.Email == "" {
-		return fmt.Errorf("email required")
+	// Email validation
+	if strings.TrimSpace(l.Email) == "" {
+		return fmt.Errorf("Empty email or invalid email")
+	}
+	if !strings.HasSuffix(l.Email, "@gmail.com") {
+		return fmt.Errorf("email is invalid and does not contains @gmail.com")
+	}
+	prefix := strings.TrimSuffix(l.Email, "@gmail.com")
+	if prefix == "" {
+		return fmt.Errorf("email must contains a prefix before @gmail.com")
 	}
 	// validate designation
 	if l.Designation == "" {
@@ -92,15 +100,15 @@ func ValidateLecturer(l Lecturer) error {
 // validateLecturer validates incoming library data
 func ValidateLibrary(l Library) error {
 	// validate name
-	if l.Book_name == "" {
-		return fmt.Errorf("name required")
+	if strings.TrimSpace(l.Book_name) == "" {
+		return fmt.Errorf("Empty book_name or invalid book_name")
 	}
 	// validate title
-	if l.Title == "" {
+	if strings.TrimSpace(l.Title) == "" {
 		return fmt.Errorf("title required")
 	}
 	// validate author
-	if l.Author == "" {
+	if strings.TrimSpace(l.Author) == "" {
 		return fmt.Errorf("author required")
 	}
 	// validate available_copies
@@ -987,7 +995,7 @@ func (h *LibraryHandler) BorrowBookHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Validate required fields
-	if info.BookID == 0 || info.UserID == 0 {
+	if info.BookID == 0 || info.UserID == 0 || (info.UserType != "student" && info.UserType != "lecturer") {
 		http.Error(w, "book_id and user_id required", http.StatusBadRequest)
 		return
 	}
