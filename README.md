@@ -234,7 +234,9 @@ curl -X POST -H "Content-Type: application/json" ^
 ```
 #### Refresh 
 ```bash 
-curl -X POST http://localhost:8080/refresh -b cookies.txt
+curl -X POST http://localhost:8080/refresh ^
+-b cookies.txt ^
+-c cookies.txt
 ```
 #### Logout  
 ```bash
