@@ -203,6 +203,48 @@ func (m *MongoDBLibraryRepo) DeleteLibrary(id int) error {
 	return nil
 }
 
+func (m *MySQLLibraryRepo) CheckUserExists(userID int, userType string) (bool, error) {
+	var query string
+
+	switch userType {
+	case "student":
+		query = "SELECT COUNT(*) FROM students WHERE id=?"
+	case "lecturer":
+		query = "SELECT COUNT(*) FROM lecturers WHERE id=?"
+	default:
+		return false, errors.New("invalid user type")
+	}
+
+	var Count int
+	err := m.DB.QueryRow(query, userID).Scan(&Count)
+	if err != nil {
+		return false, err
+	}
+
+	return Count > 0, nil
+}
+
+func (m *MongoDBLibraryRepo) CheckUserExists(userID int, userType string) (bool, error) {
+	ctx := context.TODO()
+
+	var collection *mongo.Collection
+
+	switch userType {
+	case "student":
+		collection = m.Collection.Database().Collection("students")
+	case "lecturer":
+		collection = m.Collection.Database().Collection("lecturers")
+	default:
+		return false, errors.New("invalid user type")
+	}
+
+	count, err := collection.CountDocuments(ctx, bson.M{"id": userID})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 // BorrowBook borrow books from libraries
 func (m *MySQLLibraryRepo) BorrowBook(info BorrowInfo) error {
 
