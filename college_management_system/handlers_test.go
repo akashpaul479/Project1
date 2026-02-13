@@ -2525,7 +2525,7 @@ func TestLibraryHandler_BorrowBookHandler(t *testing.T) {
 		willpass  bool
 	}{
 		{
-			name:   "mysql valid borrowinfo",
+			name:   "mysql valid student borrow",
 			dbtype: "mysql",
 			borroInfo: collegemanagementsystem.BorrowInfo{
 				UserID:   1,
@@ -2535,7 +2535,7 @@ func TestLibraryHandler_BorrowBookHandler(t *testing.T) {
 			willpass: true,
 		},
 		{
-			name:   "mongo valid borrowinfo",
+			name:   "mongo valid student borrow",
 			dbtype: "mongo",
 			borroInfo: collegemanagementsystem.BorrowInfo{
 				UserID:   1,
@@ -2632,34 +2632,58 @@ func TestLibraryHandler_BorrowBookHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			mysqlDB.Exec("SET FOREIGN_KEY_CHECKS=0")
-			mysqlDB.Exec("TRUNCATE TABLE borrow_records")
-			mysqlDB.Exec("TRUNCATE TABLE libraries")
-			mysqlDB.Exec("SET FOREIGN_KEY_CHECKS=1")
+			mysqlDB.Exec("DELETE FROM students")
+			mysqlDB.Exec("DELETE FROM lecturers")
+			mysqlDB.Exec("DELETE FROM libraries")
+			mysqlDB.Exec("DELETE FROM borrow_records")
 
-			mongodb.Collection("libraries").DeleteMany(context.Background(), bson.M{})
-			mongodb.Collection("borrow_records").DeleteMany(context.Background(), bson.M{})
+			mongodb.Collection("students").DeleteMany(context.Background(), map[string]interface{}{})
+			mongodb.Collection("lecturers").DeleteMany(context.Background(), map[string]interface{}{})
+			mongodb.Collection("libraries").DeleteMany(context.Background(), map[string]interface{}{})
+			mongodb.Collection("borrow_records").DeleteMany(context.Background(), map[string]interface{}{})
+
 			redisClient.FlushAll(context.Background())
 
-			if tt.willpass {
-				if tt.dbtype == "mysql" {
-					mysqlDB.Exec("INSERT INTO libraries (book_id, book_name, title, author, available_copies) VALUES (?,?,?,?,?)",
-						1, "comics", "boys", "abhi", 5)
-				} else {
-					mongodb.Collection("libraries").InsertOne(context.Background(), bson.M{
-						"book_id":          1,
-						"book_name":        "comics",
-						"title":            "boys",
-						"author":           "abhi",
-						"available_copies": 5,
+			// Insert users
+
+			if tt.borroInfo.UserType == "student" {
+				mysqlDB.Exec("INSERT INTO students(id,name,age,email,dept) VALUES(1,'Akash',22,'akash@gmail.com','CSE')")
+
+				mongodb.Collection("students").InsertOne(context.Background(), map[string]interface{}{"id": 1, "name": "Akash", "age": 22, "email": "akash@gmail.com", "dept": "CSE"})
+			} else if tt.borroInfo.UserType == "lecturer" {
+
+				mysqlDB.Exec("INSERT INTO lecturers(id,name,age,email,designation) VALUES(1,'Abhi',30,'abhi@gmail.com','Prof')")
+
+				mongodb.Collection("lecturers").InsertOne(context.Background(),
+					map[string]interface{}{
+						"id":          1,
+						"name":        "Abhi",
+						"age":         30,
+						"email":       "abhi@gmail.com",
+						"designation": "Prof",
 					})
-				}
 			}
-			body, err := json.Marshal(tt.borroInfo)
+
+			// Insert Books
+			mysqlDB.Exec(
+				"INSERT INTO libraries(book_id,book_name,title,author,available_copies) VALUES(1,'Go','GoLang','Alan',5)",
+			)
+
+			mongodb.Collection("libraries").InsertOne(context.Background(),
+				map[string]interface{}{
+					"book_id":          1,
+					"book_name":        "Go",
+					"title":            "GoLang",
+					"author":           "Alan",
+					"available_copies": 5,
+				})
+			data := tt.borroInfo
+
+			Userbytes, err := json.Marshal(data)
 			if err != nil {
 				panic(err)
 			}
-			buffer := bytes.NewBuffer(body)
+			buffer := bytes.NewBuffer(Userbytes)
 			r := httptest.NewRequest(http.MethodPost, "/borrow?db="+tt.dbtype, buffer)
 			w := httptest.NewRecorder()
 
@@ -2674,6 +2698,205 @@ func TestLibraryHandler_BorrowBookHandler(t *testing.T) {
 
 				if w.Code == http.StatusOK {
 					t.Fatal("Expected failure, got success")
+				}
+			}
+		})
+	}
+}
+
+func TestLibraryHandler_ReturnBookHandler(t *testing.T) {
+	tests := []struct {
+		name      string // description of this test case
+		dbtype    string
+		borroInfo collegemanagementsystem.BorrowInfo
+		willpass  bool
+	}{
+		{
+			name:   "mysql valid student return",
+			dbtype: "mysql",
+			borroInfo: collegemanagementsystem.BorrowInfo{
+				UserID:   1,
+				UserType: "student",
+				BookID:   1,
+			},
+			willpass: true,
+		},
+		{
+			name:   "mongo valid student return",
+			dbtype: "mongo",
+			borroInfo: collegemanagementsystem.BorrowInfo{
+				UserID:   1,
+				UserType: "student",
+				BookID:   1,
+			},
+			willpass: true,
+		},
+		{
+			name:   "mysql invalid userID",
+			dbtype: "mysql",
+			borroInfo: collegemanagementsystem.BorrowInfo{
+				UserID:   0,
+				UserType: "student",
+				BookID:   1,
+			},
+			willpass: false,
+		},
+		{
+			name:   "mongo invalid userID",
+			dbtype: "mongo",
+			borroInfo: collegemanagementsystem.BorrowInfo{
+				UserID:   0,
+				UserType: "student",
+				BookID:   1,
+			},
+			willpass: false,
+		},
+		{
+			name:   "mysql invalid usertype",
+			dbtype: "mysql",
+			borroInfo: collegemanagementsystem.BorrowInfo{
+				UserID:   0,
+				UserType: "",
+				BookID:   1,
+			},
+			willpass: false,
+		},
+		{
+			name:   "mongo invalid usertype",
+			dbtype: "mongo",
+			borroInfo: collegemanagementsystem.BorrowInfo{
+				UserID:   0,
+				UserType: "",
+				BookID:   1,
+			},
+			willpass: false,
+		},
+		{
+			name:   "mysql invalid bookID",
+			dbtype: "mysql",
+			borroInfo: collegemanagementsystem.BorrowInfo{
+				UserID:   0,
+				UserType: "student",
+				BookID:   0,
+			},
+			willpass: false,
+		},
+		{
+			name:   "mongo invalid bookID",
+			dbtype: "mongo",
+			borroInfo: collegemanagementsystem.BorrowInfo{
+				UserID:   0,
+				UserType: "student",
+				BookID:   0,
+			},
+			willpass: false,
+		},
+	}
+	os.Setenv("MONGO_URI", "mongodb://localhost:27017")
+	os.Setenv("MONGO_DB", "college_db")
+	os.Setenv("REDIS_ADDR", "localhost:6379")
+	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
+
+	// Initialize Redis client
+	redisClient := collegemanagementsystem.ConnectRedis()
+
+	// Connect to MySQl
+	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Connectto  MongoDB
+	mongodb, err := collegemanagementsystem.ConnectMongo()
+	if err != nil {
+		log.Fatal(err)
+	}
+	mysqlLibrary := collegemanagementsystem.NewMySQLLibraryRepo(mysqlDB)
+	mongoLibrary := collegemanagementsystem.NewMongoDBLibraryRepo(mongodb.Collection("libraries"), mongodb.Collection("borrow_records"))
+
+	Libraryshandler := &collegemanagementsystem.LibraryHandler{MySQLRepo: mysqlLibrary, MongoRepo: mongoLibrary, Redis: redisClient}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			mysqlDB.Exec("DELETE FROM students")
+			mysqlDB.Exec("DELETE FROM lecturers")
+			mysqlDB.Exec("DELETE FROM libraries")
+			mysqlDB.Exec("DELETE FROM borrow_records")
+
+			mongodb.Collection("students").DeleteMany(context.Background(), map[string]interface{}{})
+			mongodb.Collection("lecturers").DeleteMany(context.Background(), map[string]interface{}{})
+			mongodb.Collection("libraries").DeleteMany(context.Background(), map[string]interface{}{})
+			mongodb.Collection("borrow_records").DeleteMany(context.Background(), map[string]interface{}{})
+
+			redisClient.FlushAll(context.Background())
+
+			// Insert users
+
+			if tt.borroInfo.UserType == "student" {
+				mysqlDB.Exec("INSERT INTO students(id,name,age,email,dept) VALUES(1,'Akash',22,'akash@gmail.com','CSE')")
+
+				mongodb.Collection("students").InsertOne(context.Background(), map[string]interface{}{"id": 1, "name": "Akash", "age": 22, "email": "akash@gmail.com", "dept": "CSE"})
+			} else if tt.borroInfo.UserType == "lecturer" {
+
+				mysqlDB.Exec("INSERT INTO lecturers(id,name,age,email,designation) VALUES(1,'Abhi',30,'abhi@gmail.com','Prof')")
+
+				mongodb.Collection("lecturers").InsertOne(context.Background(),
+					map[string]interface{}{
+						"id":          1,
+						"name":        "Abhi",
+						"age":         30,
+						"email":       "abhi@gmail.com",
+						"designation": "Prof",
+					})
+			}
+
+			// Insert Books
+			mysqlDB.Exec(
+				"INSERT INTO libraries(book_id,book_name,title,author,available_copies) VALUES(1,'Go','GoLang','Alan',5)",
+			)
+
+			mongodb.Collection("libraries").InsertOne(context.Background(),
+				map[string]interface{}{
+					"book_id":          1,
+					"book_name":        "Go",
+					"title":            "GoLang",
+					"author":           "Alan",
+					"available_copies": 5,
+				})
+
+			// Borrow first
+			mysqlDB.Exec("INSERT INTO borrow_records(user_id,user_type,book_id) VALUES(1,'student',1)")
+
+			mongodb.Collection("borrow_records").InsertOne(context.Background(),
+				map[string]interface{}{
+					"user_id":     1,
+					"user_type":   "student",
+					"book_id":     1,
+					"return_date": "",
+				})
+			data := tt.borroInfo
+
+			Userbytes, err := json.Marshal(data)
+			if err != nil {
+				panic(err)
+			}
+			buffer := bytes.NewBuffer(Userbytes)
+			r := httptest.NewRequest(http.MethodPost, "/return?db="+tt.dbtype, buffer)
+			w := httptest.NewRecorder()
+
+			Libraryshandler.ReturnBookHandler(w, r)
+
+			if tt.willpass {
+
+				if w.Code != http.StatusOK {
+					t.Fatalf("Expected 200, got %d", w.Code)
+				}
+
+			} else {
+
+				if w.Code == http.StatusOK {
+					t.Fatalf("Expected failure but got success")
 				}
 			}
 		})
