@@ -141,6 +141,8 @@ type LibraryRepository interface {
 
 	BorrowBook(info BorrowInfo) error
 	ReturnBook(info BorrowInfo) error
+
+	CheckUserExists(userID int, userType string) (bool, error)
 }
 
 // Handler Repository Selectors
