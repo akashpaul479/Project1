@@ -995,11 +995,28 @@ func (h *LibraryHandler) BorrowBookHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Validate required fields
-	if info.BookID == 0 || info.UserID == 0 || (info.UserType != "student" && info.UserType != "lecturer") {
+	if info.BookID == 0 || info.UserID == 0 {
 		http.Error(w, "book_id and user_id required", http.StatusBadRequest)
 		return
 	}
 
+	// Validate user type
+	if info.UserType != "student" && info.UserType != "lecturer" {
+		http.Error(w, "user_type must be student or lecturer", http.StatusBadRequest)
+		return
+	}
+
+	// Check user exists in DB
+	exists, err := repo.CheckUserExists(info.UserID, info.UserType)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if !exists {
+		http.Error(w, "User does not exist in database", http.StatusBadRequest)
+		return
+	}
 	// Call repository method to borrow the book
 	err = repo.BorrowBook(info)
 	if err != nil {
@@ -1057,13 +1074,31 @@ func (h *LibraryHandler) ReturnBookHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Validate user type
+	if info.UserType != "student" && info.UserType != "lecturer" {
+		http.Error(w, "user_type must be student or lecturer", http.StatusBadRequest)
+		return
+	}
+
+	// Check user exists in DB
+	exists, err := repo.CheckUserExists(info.UserID, info.UserType)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if !exists {
+		http.Error(w, "User does not exist in database", http.StatusBadRequest)
+		return
+	}
+
 	// Call repository method to return the book
 	err = repo.ReturnBook(info)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	// ✅ Get logged-in user
+	// Get logged-in user
 	actor := r.Header.Get("X-User-Email")
 	if actor == "" {
 		actor = "unknown"
@@ -1072,6 +1107,7 @@ func (h *LibraryHandler) ReturnBookHandler(w http.ResponseWriter, r *http.Reques
 	// Log activity and Audit trail
 	go LogActivity("RETURN_RECORDS", actor)
 	go AuditLog("RETURN", "RECORDS", info.BookID, actor)
+
 	// Send response
 	json.NewEncoder(w).Encode(map[string]string{"message": "Book Returned successfully!"})
 }
