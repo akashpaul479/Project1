@@ -219,6 +219,8 @@ func College_Management_System() {
 	// Load environment variables
 	godotenv.Load()
 
+	SecretKey = []byte(os.Getenv("JWT_SECRET"))
+
 	// Initialize Redis client
 	redisClient := ConnectRedis()
 
