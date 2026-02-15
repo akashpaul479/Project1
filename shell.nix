@@ -2,7 +2,7 @@
 
 pkgs.mkShell {
   buildInputs = [
-    pkgs.go_1_23
+    pkgs.go
     pkgs.git
     pkgs.docker
     pkgs.docker-compose
