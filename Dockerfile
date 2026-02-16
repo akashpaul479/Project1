@@ -12,7 +12,7 @@ RUN go mod download
 
 # Copy all source code
 COPY . .
-
+ 
 # Build application
 RUN go build -o main .
 
