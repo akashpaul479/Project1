@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,6 +18,25 @@ type Student struct {
 	Age   int    `json:"age" bson:"age"`
 	Email string `json:"email" bson:"email"`
 	Dept  string `json:"dept" bson:"dept"`
+}
+
+// validation
+func StudentRepoValidation(students Student) error {
+	if strings.TrimSpace(students.Name) == "" {
+		return fmt.Errorf("empty name or invalid name ")
+	}
+	if students.Age <= 0 {
+		return fmt.Errorf("invalid age")
+	}
+
+	if strings.TrimSpace(students.Email) == "" {
+		return fmt.Errorf("email is required")
+	}
+
+	if strings.TrimSpace(students.Dept) == "" {
+		return fmt.Errorf("dept is required")
+	}
+	return nil
 }
 
 // Repository Constructors
@@ -32,7 +53,10 @@ func NewMongoDBStudentRepo(col *mongo.Collection) StudentRepository {
 
 // CreateStudent inserts student into MySQL database
 func (m *MySQLStudentRepo) CreateStudent(s Student) (*Student, error) {
-
+	// validation
+	if err := StudentRepoValidation(s); err != nil {
+		return nil, fmt.Errorf("unable to validate student")
+	}
 	// Execute SQL insert query
 	res, err := m.DB.Exec("INSERT INTO students(name , age , email , dept ) VALUES (? , ? , ? , ?)", s.Name, s.Age, s.Email, s.Dept)
 	if err != nil {
@@ -65,7 +89,9 @@ func (m *MySQLStudentRepo) GetAllStudent() ([]Student, error) {
 
 		var s Student
 
-		rows.Scan(&s.ID, &s.Name, &s.Age, &s.Email, &s.Dept)
+		if err := rows.Scan(&s.ID, &s.Name, &s.Age, &s.Email, &s.Dept); err != nil {
+			return nil, err
+		}
 
 		students = append(students, s)
 	}
@@ -95,6 +121,10 @@ func (m *MySQLStudentRepo) GetByIDStudent(id int) (*Student, error) {
 // UpdateStudent updates an existing student record in MySQL
 func (m *MySQLStudentRepo) UpdateStudent(s Student) error {
 
+	// validation
+	if err := StudentRepoValidation(s); err != nil {
+		return err
+	}
 	_, err := m.DB.Exec(
 		"UPDATE students SET name=?,age=?,email=?,dept=? WHERE id=?",
 		s.Name, s.Age, s.Email, s.Dept, s.ID,
@@ -125,6 +155,10 @@ func (m *MySQLStudentRepo) DeleteStudent(id int) error {
 // CreateStudent inserts a new student document into MongoDB.
 func (m *MongoDBStudentRepo) CreateStudent(s Student) (*Student, error) {
 
+	// validation
+	if err := StudentRepoValidation(s); err != nil {
+		return nil, fmt.Errorf("unable to validate student")
+	}
 	// Generate ID manually
 	count, _ := m.Collection.CountDocuments(context.TODO(), bson.M{})
 	s.ID = int(count) + 1
@@ -167,6 +201,12 @@ func (m *MongoDBStudentRepo) GetByIDStudent(id int) (*Student, error) {
 
 // UpdateStudent updates an existing student document in MongoDB
 func (m *MongoDBStudentRepo) UpdateStudent(s Student) error {
+
+	// validation
+	if err := StudentRepoValidation(s); err != nil {
+		return err
+	}
+
 	_, err := m.Collection.UpdateOne(context.TODO(), bson.M{"id": s.ID}, bson.M{"$set": s})
 	return err
 }
