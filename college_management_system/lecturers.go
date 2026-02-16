@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,6 +18,25 @@ type Lecturer struct {
 	Age         int    `json:"age" bson:"age"`
 	Email       string `json:"email" bson:"email"`
 	Designation string `json:"designation" bson:"designation"`
+}
+
+// validation
+func LecturerRepoValidation(lecturers Lecturer) error {
+	if strings.TrimSpace(lecturers.Name) == "" {
+		return fmt.Errorf("empty name or invalid name ")
+	}
+	if lecturers.Age <= 0 {
+		return fmt.Errorf("invalid age")
+	}
+
+	if strings.TrimSpace(lecturers.Email) == "" {
+		return fmt.Errorf("email is required")
+	}
+
+	if strings.TrimSpace(lecturers.Designation) == "" {
+		return fmt.Errorf("designation is required")
+	}
+	return nil
 }
 
 // Repository Constructors
@@ -34,6 +55,11 @@ func NewMongoDBLecturerRepo(col *mongo.Collection) LecturerRepository {
 
 // CreateLecturer inserts a new lecturer record into MySQL
 func (m *MySQLLecturerRepo) CreateLecturer(l Lecturer) (*Lecturer, error) {
+
+	// validation
+	if err := LecturerRepoValidation(l); err != nil {
+		return nil, fmt.Errorf("unable to validate lecturer")
+	}
 	res, err := m.DB.Exec("INSERT INTO lecturers(name , age , email , designation ) VALUES (? , ? , ? , ?)", l.Name, l.Age, l.Email, l.Designation)
 	if err != nil {
 		return nil, err
