@@ -120,6 +120,11 @@ func (m *MySQLLecturerRepo) GetByIDLecturer(id int) (*Lecturer, error) {
 // UpdateLecturer updates an existing lecturer record in MySQL
 func (m *MySQLLecturerRepo) UpdateLecturer(l Lecturer) error {
 
+	// validation
+	if err := LecturerRepoValidation(l); err != nil {
+		return err
+	}
+
 	_, err := m.DB.Exec(
 		"UPDATE lecturers SET name=?,age=?,email=?,designation=? WHERE id=?",
 		l.Name, l.Age, l.Email, l.Designation, l.ID,
@@ -151,6 +156,10 @@ func (m *MySQLLecturerRepo) DeleteLecturer(id int) error {
 // CreateLecturer inserts a new lecturer document into MongoDB
 func (m *MongoDBLecturerRepo) CreateLecturer(l Lecturer) (*Lecturer, error) {
 
+	// validation
+	if err := LecturerRepoValidation(l); err != nil {
+		return nil, fmt.Errorf("unable to validate lecturer")
+	}
 	// Generate ID manually
 	count, _ := m.Collection.CountDocuments(context.TODO(), bson.M{})
 	l.ID = int(count) + 1
@@ -174,7 +183,9 @@ func (m *MongoDBLecturerRepo) GetAllLecturer() ([]Lecturer, error) {
 
 	for cur.Next(context.TODO()) {
 		var l Lecturer
-		cur.Decode(&l)
+		if err := cur.Decode(&l); err != nil {
+			return nil, err
+		}
 
 		lecturers = append(lecturers, l)
 
@@ -193,6 +204,11 @@ func (m *MongoDBLecturerRepo) GetByIDLecturer(id int) (*Lecturer, error) {
 
 // UpdateLecturer updates an existing lecturer document in MongoDB
 func (m *MongoDBLecturerRepo) UpdateLecturer(l Lecturer) error {
+
+	// validation
+	if err := LecturerRepoValidation(l); err != nil {
+		return err
+	}
 	_, err := m.Collection.UpdateOne(context.TODO(), bson.M{"id": l.ID}, bson.M{"$set": l})
 	return err
 }
