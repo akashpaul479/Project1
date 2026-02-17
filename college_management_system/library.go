@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -30,6 +32,24 @@ type BorrowInfo struct {
 	ReturnDate string `json:"return_date" bson:"return_date"`
 }
 
+func LibraryRepoValidation(libraries Library) error {
+	if strings.TrimSpace(libraries.Book_name) == "" {
+		return fmt.Errorf("empty book_name or invalid book_name ")
+	}
+	if strings.TrimSpace(libraries.Title) == "" {
+		return fmt.Errorf("empty title invalid title")
+	}
+
+	if strings.TrimSpace(libraries.Author) == "" {
+		return fmt.Errorf("empty author or invalid author")
+	}
+
+	if libraries.Available_copies <= 0 {
+		return fmt.Errorf("available_copies should not be 0 or less than 0")
+	}
+	return nil
+}
+
 // Repository Constructors
 
 // NewMySQLLibraryRepo creates a new MySQLLibraryRepo instance
@@ -44,6 +64,11 @@ func NewMongoDBLibraryRepo(col *mongo.Collection, borrowcol *mongo.Collection) L
 
 // CreateLibrary inserts library into MySQL database
 func (m *MySQLLibraryRepo) CreateLibrary(l Library) (*Library, error) {
+
+	// validation
+	if err := LibraryRepoValidation(l); err != nil {
+		return nil, fmt.Errorf("unable to validate library")
+	}
 
 	// Execute SQL insert query
 	res, err := m.DB.Exec("INSERT INTO libraries(book_name , title , author , available_copies) VALUES ( ? , ? , ? , ?)", l.Book_name, l.Title, l.Author, l.Available_copies)
@@ -109,6 +134,11 @@ func (m *MySQLLibraryRepo) GetByIDLibrary(id int) (*Library, error) {
 // UpdateLibrary updates an existing libraries record in MySQL
 func (m *MySQLLibraryRepo) UpdateLibrary(l Library) error {
 
+	// validation
+	if err := LibraryRepoValidation(l); err != nil {
+		return err
+	}
+
 	_, err := m.DB.Exec(
 		"UPDATE libraries SET book_name=?,title=?,author=?,available_copies=? WHERE book_id=?",
 		l.Book_name, l.Title, l.Author, l.Available_copies, l.Book_id,
@@ -139,6 +169,11 @@ func (m *MySQLLibraryRepo) DeleteLibrary(id int) error {
 
 // CreateLibrary inserts a new library document into MongoDB.
 func (m *MongoDBLibraryRepo) CreateLibrary(l Library) (*Library, error) {
+
+	// validation
+	if err := LibraryRepoValidation(l); err != nil {
+		return nil, fmt.Errorf("unable to validate library")
+	}
 
 	// Generate ID manually
 	count, _ := m.Collection.CountDocuments(context.TODO(), bson.M{})
@@ -182,6 +217,12 @@ func (m *MongoDBLibraryRepo) GetByIDLibrary(id int) (*Library, error) {
 
 // UpdateLibrary updates an existing libraries document in MongoDB
 func (m *MongoDBLibraryRepo) UpdateLibrary(l Library) error {
+
+	// validation
+	if err := LibraryRepoValidation(l); err != nil {
+		return err
+	}
+
 	_, err := m.Collection.UpdateOne(context.TODO(), bson.M{"book_id": l.Book_id}, bson.M{"$set": l})
 	return err
 }
