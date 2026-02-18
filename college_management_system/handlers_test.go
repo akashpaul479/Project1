@@ -185,7 +185,10 @@ func TestStudentHandler_CreateStudent(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -299,7 +302,10 @@ func TestStudentHandler_GetAllStudent(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -393,7 +399,10 @@ func TestStudentHandler_GetByIDStudent(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -473,7 +482,10 @@ func TestStudentHandler_UpdateStudent(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -766,7 +778,10 @@ func TestStudentHandler_DeleteStudent(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -1007,7 +1022,10 @@ func TestLecturerHandler_CreateLecturer(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -1115,7 +1133,10 @@ func TestLecturerHandler_GetAllLecturer(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -1206,7 +1227,10 @@ func TestLecturerHandler_GetByIDLectuurer(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -1285,7 +1309,10 @@ func TestLecturerHandler_UpdateLecturer(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -1577,7 +1604,10 @@ func TestLecturerHandler_DeleteLecturer(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -1839,7 +1869,10 @@ func TestLibraryHandler_CreateLibrary(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -1952,7 +1985,10 @@ func TestLibraryHandler_GetAllLibrary(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -2049,7 +2085,10 @@ func TestLibraryHandler_GetByIDLibrary(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -2129,7 +2168,10 @@ func TestLibraryHandler_UpdateLibrary(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -2445,7 +2487,10 @@ func TestLibraryHandler_DeleteLibrary(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -2611,7 +2656,10 @@ func TestLibraryHandler_BorrowBookHandler(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
@@ -2798,7 +2846,10 @@ func TestLibraryHandler_ReturnBookHandler(t *testing.T) {
 	os.Setenv("MYSQL_DSN", "root:root@tcp(localhost:3306)/management_system")
 
 	// Initialize Redis client
-	redisClient := collegemanagementsystem.ConnectRedis()
+	redisClient, err := collegemanagementsystem.ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := collegemanagementsystem.ConnectMySQL()
