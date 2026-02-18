@@ -27,19 +27,17 @@ func setupMySQLLibraryTestDB(t *testing.T) *sql.DB {
 
 func clearLibraryTable(db *sql.DB) {
 
-	db.Exec("SET FOREIGN_KEY_CHECKS=0")
-
-	_, err := db.Exec("TRUNCATE TABLE libraries")
+	// Delete child first
+	_, err := db.Exec("DELETE FROM borrow_records")
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = db.Exec("TRUNCATE TABLE borrow_records")
+	// Then parent
+	_, err = db.Exec("DELETE FROM libraries")
 	if err != nil {
 		panic(err)
 	}
-
-	db.Exec("SET FOREIGN_KEY_CHECKS=1")
 }
 
 func setupMongoLibraryTestDB(t *testing.T) (*mongo.Collection, *mongo.Collection) {
@@ -891,6 +889,345 @@ func TestMongoDBLibraryRepo_ReturnBook(t *testing.T) {
 			if !tt.willpass && err == nil {
 				t.Fatal("expected error")
 			}
+		})
+	}
+}
+
+func TestMySQLLibraryRepo_BorrowBook(t *testing.T) {
+
+	db := setupMySQLLibraryTestDB(t)
+	defer db.Close()
+
+	repo := collegemanagementsystem.NewMySQLLibraryRepo(db)
+
+	tests := []struct {
+		name     string // description of this test case
+		copies   int
+		willpass bool
+	}{
+		{
+			name:     "available",
+			copies:   2,
+			willpass: true,
+		},
+		{
+			name:     " not available",
+			copies:   0,
+			willpass: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			clearLibraryTable(db)
+
+			id := 1
+
+			// Insert library
+			db.Exec("INSERT INTO libraries(book_id , book_name , title , author , available_copies) VALUES (? , ? , ? , ? , ?)", id, "comics", "The boys", "abhi", tt.copies)
+
+			info := collegemanagementsystem.BorrowInfo{
+				BookID: id,
+				UserID: 1,
+			}
+
+			err := repo.BorrowBook(info)
+
+			if tt.willpass && err != nil {
+				t.Fatal(err)
+			}
+
+			if !tt.willpass && err == nil {
+				t.Fatal("expected error")
+			}
+		})
+	}
+}
+
+func TestMySQLLibraryRepo_ReturnBook(t *testing.T) {
+
+	db := setupMySQLLibraryTestDB(t)
+	defer db.Close()
+
+	repo := collegemanagementsystem.NewMySQLLibraryRepo(db)
+
+	tests := []struct {
+		name     string // description of this test case
+		borrowed bool
+		willpass bool
+	}{
+		{
+			name:     "return valid",
+			borrowed: true,
+			willpass: true,
+		},
+		{
+			name:     " return invalid",
+			borrowed: false,
+			willpass: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			clearLibraryTable(db)
+
+			bookID := 1
+			userID := 1
+
+			// Insert library
+			_, err := db.Exec("INSERT INTO libraries(book_id , book_name , title , author , available_copies) VALUES (? , ? , ? , ? , ?)", bookID, "comics", "The boys", "abhi", 1)
+			if err != nil {
+				t.Fatalf("insert library failed: %v", err)
+			}
+
+			// Insert borrow record if needed
+			if tt.borrowed {
+
+				_, err := db.Exec(`
+					INSERT INTO borrow_records
+					SET borrow_id = ?,
+						book_id = ?,
+						user_id = ?,
+						user_type = ?,
+						return_date = NULL,
+						borrow_date = ?
+				`,
+					1, bookID, userID, "student", time.Now(),
+				)
+
+				if err != nil {
+					t.Fatalf("insert borrow failed: %v", err)
+				}
+
+			}
+
+			info := collegemanagementsystem.BorrowInfo{
+				BookID: bookID,
+				UserID: userID,
+			}
+
+			err = repo.ReturnBook(info)
+
+			if tt.willpass && err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+
+			if !tt.willpass && err == nil {
+				t.Fatal("expected error, got nil")
+			}
+
+			if tt.willpass {
+
+				var copies int
+				err := db.QueryRow(
+					"SELECT available_copies FROM libraries WHERE book_id=?",
+					bookID,
+				).Scan(&copies)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if copies != 2 {
+					t.Fatalf("expected copies 2, got %d", copies)
+				}
+			}
+
+		})
+	}
+}
+
+func TestMySQLLibraryRepo_CheckUserExists(t *testing.T) {
+
+	db := setupMySQLLibraryTestDB(t)
+	defer db.Close()
+
+	repo := collegemanagementsystem.NewMySQLLibraryRepo(db)
+
+	tests := []struct {
+		name     string // description of this test case
+		userType string
+		insert   bool
+		willpass bool
+	}{
+		{
+			name:     "student exists",
+			userType: "student",
+			insert:   true,
+			willpass: true,
+		},
+		{
+			name:     "student not exists",
+			userType: "student",
+			insert:   false,
+			willpass: false,
+		},
+		{
+			name:     "lecturer exists",
+			userType: "lecturer",
+			insert:   true,
+			willpass: true,
+		},
+		{
+			name:     "lecturer not exists",
+			userType: "lecturer",
+			insert:   false,
+			willpass: false,
+		},
+		{
+			name:     "invalid user type",
+			userType: "admin",
+			insert:   false,
+			willpass: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			db.Exec("DELETE FROM students")
+			db.Exec("DELETE FROM lecturers")
+
+			userID := 1
+
+			if tt.insert {
+
+				if tt.userType == "student" {
+					_, err := db.Exec("INSERT INTO students (id , name , age , email, dept) VALUES (? , ? , ? , ? , ?)", userID, "Akash", 22, "akash@gmail.com", "CSE")
+					if err != nil {
+						t.Fatal(err)
+					}
+				}
+				if tt.userType == "lecturer" {
+					_, err := db.Exec("INSERT INTO lecturers (id , name , age , email, designation) VALUES (? , ? , ? , ? , ?)", userID, "Akash", 40, "akash@gmail.com", "HOD")
+					if err != nil {
+						t.Fatal(err)
+					}
+				}
+
+			}
+
+			exists, err := repo.CheckUserExists(userID, tt.userType)
+
+			// invalid type case
+			if tt.userType == "admin" {
+				if err == nil {
+					t.Fatalf("expected error for invalid user type")
+				}
+				return
+			}
+			// normal case
+			if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+			if exists != tt.willpass {
+				t.Fatalf("Expected %v , got %v", tt.willpass, exists)
+			}
+		})
+	}
+}
+
+func TestMongoDBLibraryRepo_CheckUserExists(t *testing.T) {
+
+	libCol, borrowCol := setupMongoLibraryTestDB(t)
+
+	repo := collegemanagementsystem.NewMongoDBLibraryRepo(libCol, borrowCol)
+
+	// Get DB
+	db := libCol.Database()
+
+	// Correct collections
+	studentCol := db.Collection("students")
+	lecturerCol := db.Collection("lecturers")
+
+	tests := []struct {
+		name     string // description of this test case
+		userType string
+		insert   bool
+		willpass bool
+	}{
+		{
+			name:     "student exists",
+			userType: "student",
+			insert:   true,
+			willpass: true,
+		},
+		{
+			name:     "student not exists",
+			userType: "student",
+			insert:   false,
+			willpass: false,
+		},
+		{
+			name:     "lecturer exists",
+			userType: "lecturer",
+			insert:   true,
+			willpass: true,
+		},
+		{
+			name:     "lecturer not exists",
+			userType: "lecturer",
+			insert:   false,
+			willpass: false,
+		},
+		{
+			name:     "invalid user type",
+			userType: "admin",
+			insert:   false,
+			willpass: false,
+		},
+	}
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+			// TODO: construct the receiver type.
+			ClearMongoLibrary(libCol, borrowCol)
+
+			studentCol.DeleteMany(context.TODO(), bson.M{})
+			lecturerCol.DeleteMany(context.TODO(), bson.M{})
+			userID := 1
+
+			if tt.insert {
+				if tt.userType == "student" {
+					_, err := studentCol.InsertOne(context.TODO(), bson.M{
+						"id":    userID,
+						"name":  "Akash",
+						"age":   22,
+						"email": "akash@gmail.com",
+						"dept":  "CSE",
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+				}
+				if tt.userType == "lecturer" {
+					_, err := lecturerCol.InsertOne(context.TODO(), bson.M{
+						"id":          userID,
+						"name":        "Akash",
+						"age":         40,
+						"email":       "akash@gmail.com",
+						"designation": "HOD",
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+				}
+			}
+			exists, err := repo.CheckUserExists(userID, tt.userType)
+
+			if tt.userType == "admin" {
+				if err == nil {
+					t.Fatal("Expected error for invalid user_type")
+				}
+				return
+			}
+			// Normal cases
+			if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+			if exists != tt.willpass {
+				t.Fatalf("Expected %v , got %v", tt.willpass, exists)
+			}
+
 		})
 	}
 }
