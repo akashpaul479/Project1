@@ -74,12 +74,19 @@ func ConnectMySQL() (*sql.DB, error) {
 // ConnectMongo establishes a connection to MongoDB using the URI
 func ConnectMongo() (*mongo.Database, error) {
 
+	// Timeout context (5 seconds)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	client, err := mongo.Connect(
-		context.TODO(),
+		ctx,
 		options.Client().ApplyURI(os.Getenv("MONGO_URI")),
 	)
 
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Ping(ctx, nil); err != nil {
 		return nil, err
 	}
 
@@ -90,14 +97,27 @@ func ConnectMongo() (*mongo.Database, error) {
 var Ctx = context.Background()
 
 // ConnectRedis initializes and returns Redis client
-func ConnectRedis() *redis.Client {
+func ConnectRedis() (*redis.Client, error) {
 
-	// Create Redis client with address and DB
+	addr := os.Getenv("REDIS_ADDR")
+
+	if addr == "" {
+		return nil, fmt.Errorf("REDIS_ADDR is empty")
+	}
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr: os.Getenv("REDIS_ADDR"),
+		Addr: addr,
 		DB:   0,
 	})
-	return rdb
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		return nil, err
+	}
+
+	return rdb, nil
 }
 
 // Repository Interface
@@ -222,7 +242,10 @@ func College_Management_System() {
 	SecretKey = []byte(os.Getenv("JWT_SECRET"))
 
 	// Initialize Redis client
-	redisClient := ConnectRedis()
+	redisClient, err := ConnectRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MySQl
 	mysqlDB, err := ConnectMySQL()
