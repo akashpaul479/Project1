@@ -324,7 +324,10 @@ func (m *MySQLLibraryRepo) ReturnBook(info BorrowInfo) error {
 	}
 
 	// Check how many rows are affected
-	rows, _ := res.RowsAffected()
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
 
 	if rows == 0 {
 		return errors.New("Book not borrowed or already returned")
@@ -354,7 +357,7 @@ func (m *MongoDBLibraryRepo) BorrowBook(info BorrowInfo) error {
 
 	// Insert borrow records
 	// Generate ID
-	borrowID, err := m.getNextBorrowID()
+	borrowID, err := m.GetNextBorrowID()
 	if err != nil {
 		return err
 	}
@@ -400,7 +403,7 @@ func (m *MongoDBLibraryRepo) ReturnBook(info BorrowInfo) error {
 }
 
 // getNextBorrowID generates a sequential borrow_id for MongoDB
-func (m *MongoDBLibraryRepo) getNextBorrowID() (int, error) {
+func (m *MongoDBLibraryRepo) GetNextBorrowID() (int, error) {
 
 	ctx := context.TODO()
 
